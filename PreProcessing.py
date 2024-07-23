@@ -4,6 +4,14 @@ import os
 import numpy as np
 
 
+def ciclic_findings(path, listed_):
+    for _ in os.listdir(path):
+        if os.path.isdir(os.path.join(path, _)):
+            ciclic_findings(os.path.join(path, _), listed_)
+        elif os.path.isfile(os.path.join(path, _)) and 'mask' not in _ and '._' not in _:
+            listed_.append(os.path.join(path, _))
+            print(f'PATH: {os.path.join(path, _)}')
+
 def img2gray(image):
     if len(image.shape) == 3:
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
