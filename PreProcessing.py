@@ -42,7 +42,7 @@ def get_tiles(img: np.ndarray, size=(512, 512)):
     return max_tile, min_tile
 
 
-def get_ELA_(cv2_image, save_dir: str = '', offset: int = 10, brigh_it_up: bool = True):
+def get_ELA_(cv2_image, save_dir: str = '', offset: int = 10, brigh_it_up: int = 1):
     im = Image.fromarray(cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB))
 
     tmp_fname = os.path.join(save_dir, 'TMP_EXT')
@@ -51,10 +51,10 @@ def get_ELA_(cv2_image, save_dir: str = '', offset: int = 10, brigh_it_up: bool 
 
     ela_im = ImageChops.difference(im, tmp_fname_im)
 
-    if brigh_it_up:
+    if brigh_it_up > 1:
         extrema = ela_im.getextrema()
         max_diff = max([ex[1] for ex in extrema])
-        scale = 255.0 / max_diff
+        scale = 255.0 / (max_diff / brigh_it_up)
         ela_im = ImageEnhance.Brightness(ela_im).enhance(scale)
 
     ela_cv2_image = cv2.cvtColor(np.array(ela_im), cv2.COLOR_RGB2BGR)
