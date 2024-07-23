@@ -132,19 +132,14 @@ class Tester:
         self.__name__ = label
         print(f'{self.__name__} has {self.train_ds.class_names}')
 
-    def predict(self, path, label):
-        img = tf.keras.utils.load_img(
-            path, target_size=(self.img_height, self.img_widht)
-        )
-        img_array = tf.keras.utils.img_to_array(img)
+    def predictor(self, img_array, label: str = ''):
         img_array = tf.expand_dims(img_array, 0)  # Create a batch
-
         predictions = self.model.predict(img_array)
         score = tf.nn.softmax(predictions[0])
 
         print(
-            "GROUND: {} - Prediction {} with a {:.2f} percent confidence."
-            .format(label, self.train_ds.class_names[np.argmax(score)], 100 * np.max(score))
+            "Prediction {} with a {:.2f} percent confidence. {}"
+            .format(self.train_ds.class_names[np.argmax(score)], 100 * np.max(score), label)
         )
 
     def predict_(self, img: np.array):
@@ -165,5 +160,3 @@ class Tester:
 
     def export_model(self):
         self.model.save(self.__name__ + '.h5')
-
-
