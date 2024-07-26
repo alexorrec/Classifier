@@ -12,6 +12,7 @@ def ciclic_findings(path, listed_):
             listed_.append(os.path.join(path, _))
             print(f'PATH: {os.path.join(path, _)}')
 
+
 def img2gray(image):
     if len(image.shape) == 3:
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
@@ -69,3 +70,9 @@ def get_ELA_(cv2_image, save_dir: str = '', offset: int = 10, brigh_it_up: int =
     os.remove(tmp_fname)
 
     return ela_cv2_image
+
+
+def export_jpg(img: np.array, filenname: str, quality: int = 95, path: str = ''):
+    im = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    im.save(os.path.join(path, filenname) + '.jpg', format='JPEG', quality=quality)
+    print(f'{filenname} SAVED!')
