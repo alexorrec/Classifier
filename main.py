@@ -42,12 +42,12 @@ model = tf.keras.Sequential([
 ])
 """ END SEQUENTIAL """
 
-ts.specify_model(model=model, label='PRNU_softmax_512N_bis')
+ts.specify_model(model=model, label='512softmax')
 
 ts.train_model()
 ts.evaluate_model(ts.val_ds)
 ts.plot_results()
 
 res = input('save model - 0 for discard: ')
-if res != 0:
+if res != '0':
     ts.export_model()
