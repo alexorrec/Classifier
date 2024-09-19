@@ -1,7 +1,7 @@
 import tensorflow as tf
 from Classifier import Tester
 
-ds_path = 'D:\\BALANCED'
+ds_path = 'C:\\Users\\Alessandro\\Desktop\\ELA_Dataset'
 ts = Tester(ds_path, batch_size=512, ds_split=0.2, seed=5, epochs=10)
 
 shape = ts.get_shape()
@@ -42,7 +42,7 @@ model = tf.keras.Sequential([
 ])
 """ END SEQUENTIAL """
 
-ts.specify_model(model=model, label='512softmax')
+ts.specify_model(model=model, label='TEST2')
 
 ts.train_model()
 ts.evaluate_model(ts.val_ds)

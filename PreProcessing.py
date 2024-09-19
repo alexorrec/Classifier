@@ -1,3 +1,5 @@
+import random
+
 import cv2
 from PIL import Image, ImageEnhance, ImageChops
 import os
@@ -28,7 +30,7 @@ def dft(image):
     return magnitude_spectrum
 
 
-def get_tiles(img: np.ndarray, size=(512, 512)):
+def get_tiles(img: np.ndarray, size=(512, 512), more_tiles=0):
     height, width, channels = img.shape
 
     crop_height, crop_width = size
@@ -40,15 +42,30 @@ def get_tiles(img: np.ndarray, size=(512, 512)):
             crop_sum = np.sum(dft(crop))
             weights.append(((y, x), crop_sum))
 
+    random.shuffle(weights)
+    tiles = []
+    """
     min_crop = min(weights, key=lambda l: l[1])
     max_crop = max(weights, key=lambda l: l[1])
-
     y_min, x_min = min_crop[0]
     y_max, x_max = max_crop[0]
     min_tile = img[y_min:y_min + crop_height, x_min:x_min + crop_width]
     max_tile = img[y_max:y_max + crop_height, x_max:x_max + crop_width]
 
-    return max_tile, min_tile
+    weights.remove(min_crop)
+    weights.remove(max_crop)
+
+    tiles.append(min_tile)
+    tiles.append(max_tile)
+    """
+    while len(tiles) < more_tiles:
+        tile_crop = random.choice(weights)
+        weights.remove(tile_crop)
+        y_min, x_min = tile_crop[0]
+        tile = img[y_min:y_min + crop_height, x_min:x_min + crop_width]
+        tiles.append(tile)
+
+    return tiles
 
 
 def get_ELA_(cv2_image, save_dir: str = '', offset: int = 10, brigh_it_up: int = 1):

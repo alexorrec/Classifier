@@ -5,9 +5,9 @@ import cv2
 import PreProcessing as pp
 import PRNU
 
-ts = Tester('D:\\BALANCED')
+ts = Tester('C:\\Users\\Alessandro\\Desktop\\BALANCED')
 
-model = tf.keras.models.load_model('PRNU_softmax_512N.h5')
+model = tf.keras.models.load_model('TEST0.h5')
 ts.specify_model(model, '512-MODEL')
 print(f'{ts.__name__} has been loaded!')
 
