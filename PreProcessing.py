@@ -1,5 +1,4 @@
 import random
-
 import cv2
 from PIL import Image, ImageEnhance, ImageChops
 import os
@@ -7,6 +6,7 @@ import numpy as np
 
 
 def ciclic_findings(path, listed_):
+    """Given a Path, find all images even in subpaths"""
     for _ in os.listdir(path):
         if os.path.isdir(os.path.join(path, _)):
             ciclic_findings(os.path.join(path, _), listed_)
@@ -16,21 +16,25 @@ def ciclic_findings(path, listed_):
 
 
 def img2gray(image):
+    """RGB to GRAYSCALE"""
     if len(image.shape) == 3:
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     return image
 
 
 def dft(image):
+    """PERFORM LOGGED DFT"""
     img = img2gray(image)
     _dft = cv2.dft(np.float32(img), flags=cv2.DFT_COMPLEX_OUTPUT)
     dft_shift = np.fft.fftshift(_dft)
-    magnitude_spectrum = 20 * np.log(cv2.magnitude(dft_shift[:, :, 0], dft_shift[:, :, 1]))
+    magnitude_spectrum = 15 * np.log(cv2.magnitude(dft_shift[:, :, 0], dft_shift[:, :, 1]))
 
     return magnitude_spectrum
 
 
-def get_tiles(img: np.ndarray, size=(512, 512), more_tiles=0):
+def get_tiles(img: np.ndarray, size=(512, 512), more_tiles=0, just_MinMax=False):
+    """Get a Crops of the original image"""
+
     height, width, channels = img.shape
 
     crop_height, crop_width = size
@@ -42,22 +46,26 @@ def get_tiles(img: np.ndarray, size=(512, 512), more_tiles=0):
             crop_sum = np.sum(dft(crop))
             weights.append(((y, x), crop_sum))
 
-    random.shuffle(weights)
     tiles = []
-    """
-    min_crop = min(weights, key=lambda l: l[1])
-    max_crop = max(weights, key=lambda l: l[1])
-    y_min, x_min = min_crop[0]
-    y_max, x_max = max_crop[0]
-    min_tile = img[y_min:y_min + crop_height, x_min:x_min + crop_width]
-    max_tile = img[y_max:y_max + crop_height, x_max:x_max + crop_width]
+    if just_MinMax:
+        min_crop = min(weights, key=lambda l: l[1])
+        max_crop = max(weights, key=lambda l: l[1])
 
-    weights.remove(min_crop)
-    weights.remove(max_crop)
+        y_min, x_min = min_crop[0]
+        y_max, x_max = max_crop[0]
 
-    tiles.append(min_tile)
-    tiles.append(max_tile)
-    """
+        min_tile = img[y_min:y_min + crop_height, x_min:x_min + crop_width]
+        max_tile = img[y_max:y_max + crop_height, x_max:x_max + crop_width]
+
+        weights.remove(min_crop)
+        weights.remove(max_crop)
+
+        tiles.append(min_tile)
+        tiles.append(max_tile)
+        return tiles
+
+    random.shuffle(weights)
+
     while len(tiles) < more_tiles:
         tile_crop = random.choice(weights)
         weights.remove(tile_crop)
@@ -68,7 +76,7 @@ def get_tiles(img: np.ndarray, size=(512, 512), more_tiles=0):
     return tiles
 
 
-def get_ELA_(cv2_image, save_dir: str = '', offset: int = 10, brigh_it_up: int = 1):
+def get_ELA_(cv2_image, save_dir: str = '', brigh_it_up: int = 1):
     im = Image.fromarray(cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB))
 
     tmp_fname = os.path.join(save_dir, 'TMP_EXT')
@@ -93,3 +101,15 @@ def export_jpg(img: np.array, filenname: str, quality: int = 95, path: str = '')
     im = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     im.save(os.path.join(path, filenname) + '.jpg', format='JPEG', quality=quality)
     print(f'{filenname} SAVED!')
+
+
+def get_NoisePrint(img: np.array):
+    pass
+
+
+def get_SensorPatternNoise(img: np.array):
+    pass
+
+
+def get_PRNU(img: np.array):
+    pass

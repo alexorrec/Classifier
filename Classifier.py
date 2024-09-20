@@ -161,11 +161,8 @@ class Tester:
                 total -= 1
         print(f'wrong catch: {total} / {len(os.listdir(li))}')
 
-    def export_model(self, name: str = ''):
-        if not name:
-            self.model.save(self.__name__ + '.h5')
-        else:
-            self.model.save(name + '.h5')
+    def export_model(self):
+        self.model.save(self.__name__ + '.h5')
 
     def confusion_matrix(self, tensors):
         predictions = self.model.predict(

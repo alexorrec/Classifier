@@ -1,7 +1,7 @@
 import tensorflow as tf
 from Classifier import Tester
 
-ds_path = 'C:\\Users\\Alessandro\\Desktop\\ELA_Dataset'
+ds_path = 'D:\\BALANCED'
 ts = Tester(ds_path, batch_size=512, ds_split=0.2, seed=5, epochs=10)
 
 shape = ts.get_shape()
@@ -42,12 +42,12 @@ model = tf.keras.Sequential([
 ])
 """ END SEQUENTIAL """
 
-ts.specify_model(model=model, label='TEST2')
+ts.specify_model(model=model, label='PRNU_softmax_512N_bis')
 
 ts.train_model()
 ts.evaluate_model(ts.val_ds)
 ts.plot_results()
 
 res = input('save model - 0 for discard: ')
-if res != '0':
+if res != 0:
     ts.export_model()
