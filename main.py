@@ -44,21 +44,21 @@ END SEQUENTIAL """
 
 # res_model = tf.keras.applications.ResNet50(weights='imagenet', include_top=False, input_shape=shape)
 
-effB0_model = tf.keras.applications.EfficientNetB0(weights='imagenet',
+effB2_model = tf.keras.applications.EfficientNetB2(weights='imagenet',
                                                    include_top=False,
                                                    input_shape=shape)
 
-for layer in effB0_model.layers:
+for layer in effB2_model.layers:
     layer.trainable = False
 
-x = tf.keras.layers.Flatten()(effB0_model.output)
-# x = effB0_model.output
+x = tf.keras.layers.Flatten()(effB2_model.output)
 x = tf.keras.layers.Dense(1024, activation='relu')(x)
 output = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
+x = tf.keras.layers.Dropout(0.5)(x)
 
-model = tf.keras.models.Model(inputs=effB0_model.input, outputs=output)
+model = tf.keras.models.Model(inputs=effB2_model.input, outputs=output)
 
-ts.specify_model(model=model, label='PRNU_EfficientNetB0_3v')
+ts.specify_model(model=model, label='PRNU_EfficientNetB2_3v')
 
 ts.train_model()
 ts.evaluate_model(ts.val_ds)
