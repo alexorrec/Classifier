@@ -1,4 +1,6 @@
 import random
+import time
+
 import cv2
 from PIL import Image, ImageEnhance, ImageChops
 import os
@@ -20,6 +22,11 @@ def img2gray(image):
     if len(image.shape) == 3:
         return cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     return image
+
+
+def normalize(res):
+    normalized_image = (res - np.min(res)) * (255.0 / (np.max(res) - np.min(res)))
+    return normalized_image.astype('uint8')
 
 
 def dft(image):
@@ -101,6 +108,22 @@ def export_jpg(img: np.array, filenname: str, quality: int = 95, path: str = '')
     im = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
     im.save(os.path.join(path, filenname) + '.jpg', format='JPEG', quality=quality)
     print(f'{filenname} SAVED!')
+
+
+def average_images(img_l: list):
+    """get a list of cv2, return a cv2"""
+    N = len(img_l)
+
+    arr = img_l[0].astype(np.float32)
+    for im in img_l[1:]:
+        arr += im.astype(np.float32)
+
+        print(f'\r Computing: {int(time.time_ns() + 1) * 100 // N}%', end='')
+        time.sleep(0.01)
+
+    arr = arr / N
+
+    return arr.astype(np.uint8)
 
 
 def get_NoisePrint(img: np.array):

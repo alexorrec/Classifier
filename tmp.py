@@ -27,18 +27,48 @@ for img in os.listdir(REALS):
     max_tile, min_tile = pp.get_tiles(im)
     cv2.imwrite(DESTINATION + 'min_' + img, pp.get_ELA_(min_tile))
     cv2.imwrite(DESTINATION + 'max_' + img, pp.get_ELA_(max_tile))"""
+"""
+DESTINATION = 'C:\\Users\\Alessandro\\Desktop\\PRNU_SET\\XL\\'
+XL = 'C:\\Users\\Alessandro\\Desktop\\SD_Dataset\\XL_ds\\'
+
+img_l = []
+pp.ciclic_findings(XL, img_l)
+
+for img in img_l:
+    im = cv2.imread(img)
+    min_tile = pp.get_tiles(im, just_MinMax=True)[0] # get only min tile
+    residual = PRNU.extract_single(min_tile)
+
+    cv2.imwrite(os.path.join(DESTINATION, 'PRNU_' + os.path.basename(img) +'.png'), pp.normalize(residual))
+    print(f'{os.path.basename(img)} - PRNU HAS BEEN SAVED!')
+"""
+
+REALS = 'C:\\Users\\Alessandro\\Desktop\\SD_Dataset\\REALS_ds\\'
+XL = 'C:\\Users\\Alessandro\\Desktop\\SD_Dataset\\XL_ds\\'
+
+"""
+COMPUTE AVERAGE AND SAVE DFT: REALS
+"""
 
 
-def normalize(res):
-    normalized_image = (res - np.min(res)) * (255.0 / (np.max(res) - np.min(res)))
-    return normalized_image.astype('uint8')
+def main():
+    to_prnu: list = []
+    paths = []
+    pp.ciclic_findings(REALS, paths)
+
+    for img in paths:
+        im = cv2.imread(img)
+        min_tile = pp.get_tiles(im, just_MinMax=True)[0]  # get only min tile
+        to_prnu.append(min_tile)
+
+        print(f'\rExtracting Tiles {(paths.index(img) + 1) * 100 // len(paths)}', end='')
 
 
-path = '/Users/alessandrocerro/Desktop/D05_L1S4C3_0.jpg'
-im = np.asarray(Image.open(path))
-tiles = pp.get_tiles(im, just_MinMax=True)
+    print('\nExtracting prnu')
+    prnu = PRNU.extract_multiple_aligned(to_prnu)
+    plt.imsave('REAL.png', pp.dft(prnu), cmap='jet')
+    print('Process Ended.')
 
-for img in tiles:
-    residual = PRNU.extract_single(img)
-    fname = str(random.randint(0, 10))
-    cv2.imwrite('cv2_' + fname + '.png', normalize(residual))
+
+if __name__ == '__main__':
+    main()

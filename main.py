@@ -1,13 +1,13 @@
 import tensorflow as tf
 from Classifier import Tester
 
-ds_path = 'D:\\BALANCED'
-ts = Tester(ds_path, batch_size=512, ds_split=0.2, seed=5, epochs=10)
+ds_path = 'D:\\PRNUDS'
+ts = Tester(ds_path, batch_size=640, ds_split=0.2, seed=5, epochs=50)
 
 shape = ts.get_shape()
 num_classes: int = len(ts.train_ds.class_names)
 
-""" DEFINE SEQUENTIAL MODEL HERE """
+""" DEFINE SEQUENTIAL MODEL HERE 
 model = tf.keras.Sequential([
 
     tf.keras.layers.Normalization(input_shape=shape),
@@ -40,14 +40,31 @@ model = tf.keras.Sequential([
 
     tf.keras.layers.Dense(num_classes, activation='softmax')
 ])
-""" END SEQUENTIAL """
+END SEQUENTIAL """
 
-ts.specify_model(model=model, label='PRNU_softmax_512N_bis')
+# res_model = tf.keras.applications.ResNet50(weights='imagenet', include_top=False, input_shape=shape)
+
+effB0_model = tf.keras.applications.EfficientNetB0(weights='imagenet',
+                                                   include_top=False,
+                                                   input_shape=shape)
+
+for layer in effB0_model.layers:
+    layer.trainable = False
+
+x = tf.keras.layers.Flatten()(effB0_model.output)
+# x = effB0_model.output
+x = tf.keras.layers.Dense(1024, activation='relu')(x)
+output = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
+
+model = tf.keras.models.Model(inputs=effB0_model.input, outputs=output)
+
+ts.specify_model(model=model, label='PRNU_EfficientNetB0_3v')
 
 ts.train_model()
 ts.evaluate_model(ts.val_ds)
 ts.plot_results()
-
+"""
 res = input('save model - 0 for discard: ')
 if res != 0:
     ts.export_model()
+"""
