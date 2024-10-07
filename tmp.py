@@ -10,6 +10,43 @@ import random
 import PRNU
 from PIL import Image
 
+
+""" DEFINE SEQUENTIAL MODEL HERE 
+model = tf.keras.Sequential([
+
+    tf.keras.layers.Normalization(input_shape=shape),
+
+    tf.keras.layers.Conv2D(8, (5, 5), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+
+    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
+
+    tf.keras.layers.Conv2D(16, (5, 5), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+
+    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
+
+    tf.keras.layers.Conv2D(32, (5, 5), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+
+    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
+
+    tf.keras.layers.Flatten(),
+
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+
+    tf.keras.layers.Dense(num_classes, activation='softmax')
+])
+END SEQUENTIAL """
+
+
 """
 ORIGIN = 'D:\\TO_PRED_MIN\\REALS'
 destination = 'C:\\Users\\Alessandro\\Desktop\\TO_PRED_JPG\\REALS'

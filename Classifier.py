@@ -28,7 +28,7 @@ class Tester:
         self.build_sets()
         self.history = None
 
-    def train_model(self, loss_function: str = 'binary_crossentropy', lr=0.00001):
+    def train_model(self, loss_function: str = 'binary_crossentropy', lr=0.0001):
         assert self.model
 
         self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
