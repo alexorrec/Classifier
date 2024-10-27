@@ -14,7 +14,7 @@ def ciclic_findings(path, listed_):
             ciclic_findings(os.path.join(path, _), listed_)
         elif os.path.isfile(os.path.join(path, _)) and 'mask' not in _ and '._' not in _:
             listed_.append(os.path.join(path, _))
-            print(f'PATH: {os.path.join(path, _)}')
+            #print(f'PATH: {os.path.join(path, _)}')
 
 
 def img2gray(image):
@@ -64,8 +64,8 @@ def get_tiles(img: np.ndarray, size=(512, 512), more_tiles=0, just_MinMax=False)
         min_tile = img[y_min:y_min + crop_height, x_min:x_min + crop_width]
         max_tile = img[y_max:y_max + crop_height, x_max:x_max + crop_width]
 
-        weights.remove(min_crop)
-        weights.remove(max_crop)
+        #weights.remove(min_crop)
+        #weights.remove(max_crop)
 
         tiles.append(min_tile)
         tiles.append(max_tile)

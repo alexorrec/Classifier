@@ -34,7 +34,7 @@ def extract_single(im: np.ndarray,
     W = rgb2gray(W)
     W = zero_mean_total(W)
     W_std = W.std(ddof=1) if wdft_sigma == 0 else wdft_sigma
-    W = wiener_dft(W, W_std).astype(np.float32)
+    W = wiener_dft(W, W_std).astype(np.float32) # WAIT WAT?
 
     return W
 

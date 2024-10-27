@@ -4,32 +4,77 @@ import os
 
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
-ds_path = 'D:\\PRNUDS'
-ts = Tester(ds_path, batch_size=640, ds_split=0.2, seed=123, epochs=100)
+ds_path = 'C:\\Users\\Alessandro\\Desktop\\ELA_SET'
+ts = Tester(ds_path, batch_size=256, ds_split=0.2, seed=1, epochs=100)
 
 shape = ts.get_shape()
 num_classes: int = len(ts.train_ds.class_names)
-
-effB0_model = tf.keras.applications.EfficientNetB0(weights='imagenet',
-                                                   include_top=False,
-                                                   input_shape=shape)
-
-for layer in effB0_model.layers:
+"""
+effB_model = tf.keras.applications.EfficientNetB0(weights='imagenet',
+                                                  include_top=False,
+                                                  input_shape=shape)
+# effB_model.trainable = True
+for layer in effB_model.layers:
     layer.trainable = False
 
 # Lase LAYER Customization
-x = tf.keras.layers.Flatten()(effB0_model.output)
+x = tf.keras.layers.Flatten()(effB_model.output)
 x = tf.keras.layers.Dense(512, activation='relu')(x)
 x = tf.keras.layers.Dropout(0.5)(x)
 x = tf.keras.layers.Dense(256, activation='relu')(x)
-x = tf.keras.layers.Dropout(0.5)(x)
+x = tf.keras.layers.Dropout(0.3)(x)
 output = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
 
-model = tf.keras.models.Model(inputs=effB0_model.input, outputs=output)
+model = tf.keras.models.Model(inputs=effB_model.input, outputs=output)
+"""
+model = tf.keras.Sequential([
 
-ts.specify_model(model=model, label='PRNU_EfficientNetB2_3v')
+    tf.keras.layers.Normalization(input_shape=shape),
 
-ts.train_model(loss_function='sparse_categorical_entropy')
+    tf.keras.layers.Conv2D(16, (5, 5), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+
+    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
+
+    tf.keras.layers.Conv2D(32, (5, 5), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+
+    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
+
+    tf.keras.layers.Conv2D(64, (5, 5), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+
+    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
+
+    tf.keras.layers.Conv2D(128, (5, 5), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+
+    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
+
+    tf.keras.layers.Conv2D(256, (5, 5), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+
+    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
+
+    tf.keras.layers.Flatten(),
+
+    tf.keras.layers.Dense(512, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+
+    tf.keras.layers.Dense(256, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+
+    tf.keras.layers.Dense(num_classes, activation='softmax')
+])
+
+ts.specify_model(model=model, label='ELA_Sequential_3v')
+
+ts.train_model(loss_function='categorical_crossentropy', lr=0.00001)
 ts.evaluate_model(ts.val_ds)
 ts.plot_results()
 

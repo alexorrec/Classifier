@@ -57,6 +57,7 @@ class Tester:
             subset="training",
             seed=self.seed,
             image_size=(self.img_height, self.img_widht),
+            shuffle=True,
             batch_size=self.batch_size
         )
 
@@ -69,6 +70,7 @@ class Tester:
             subset="validation",
             seed=self.seed,
             image_size=(self.img_height, self.img_widht),
+            shuffle=True,
             batch_size=self.batch_size
         )
 
@@ -85,7 +87,7 @@ class Tester:
 
     def get_shape(self):
         assert self.dataset_path != '', 'Specify Dataset Path.'
-        images = list(self.dataset_path.glob('REALS/*'))
+        images = list(self.dataset_path.glob('naturals/*'))
         rnd_img = cv2.imread(str(random.sample(images, 1)[0].resolve()))
         return rnd_img.shape
 

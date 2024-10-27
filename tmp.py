@@ -47,6 +47,7 @@ model = tf.keras.Sequential([
 END SEQUENTIAL """
 
 
+
 """
 ORIGIN = 'D:\\TO_PRED_MIN\\REALS'
 destination = 'C:\\Users\\Alessandro\\Desktop\\TO_PRED_JPG\\REALS'
@@ -80,31 +81,20 @@ for img in img_l:
     print(f'{os.path.basename(img)} - PRNU HAS BEEN SAVED!')
 """
 
-REALS = 'C:\\Users\\Alessandro\\Desktop\\SD_Dataset\\REALS_ds\\'
-XL = 'C:\\Users\\Alessandro\\Desktop\\SD_Dataset\\XL_ds\\'
-
+REALS = 'D:\\SD_Dataset\\REALS_ds'
+XL = 'D:\\SD_Dataset\\XL_ds'
+V2 = 'D:\\SD_Dataset\\V2_INPAINTED'
+dest = 'C:\\Users\\Alessandro\\Desktop\\ELA_SET'
 """
 COMPUTE AVERAGE AND SAVE DFT: REALS
 """
 
 
 def main():
-    to_prnu: list = []
-    paths = []
-    pp.ciclic_findings(REALS, paths)
-
-    for img in paths:
-        im = cv2.imread(img)
-        min_tile = pp.get_tiles(im, just_MinMax=True)[0]  # get only min tile
-        to_prnu.append(min_tile)
-
-        print(f'\rExtracting Tiles {(paths.index(img) + 1) * 100 // len(paths)}', end='')
-
-
-    print('\nExtracting prnu')
-    prnu = PRNU.extract_multiple_aligned(to_prnu)
-    plt.imsave('REAL.png', pp.dft(prnu), cmap='jet')
-    print('Process Ended.')
+    for image in os.listdir(os.path.join(dest, 'naturals')):
+        if '._' in image:
+            os.remove(os.path.join(dest, 'naturals', image))
+            print(f'removed: {image}')
 
 
 if __name__ == '__main__':
