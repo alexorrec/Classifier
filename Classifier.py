@@ -28,6 +28,11 @@ class Tester:
         self.build_sets()
         self.history = None
 
+    def specify_model(self, model, label):
+        self.model = model
+        self.__name__ = label
+        print(f'{self.__name__} has {self.train_ds.class_names}')
+
     def train_model(self, loss_function: str = 'binary_crossentropy', lr=0.0001):
         assert self.model
 
@@ -45,7 +50,7 @@ class Tester:
 
     def evaluate_model(self, dataset):
         test_loss, test_acc = self.model.evaluate(dataset, verbose=2)
-        print(f'{self.__name__} - Loss {test_loss} - Accuracy {test_acc} on PassedSet')
+        print(f'{self.__name__} - Loss {test_loss} - Accuracy {test_acc} on ValSet')
 
     def build_sets(self):
         self.train_ds = tf.keras.utils.image_dataset_from_directory(
@@ -75,6 +80,7 @@ class Tester:
         )
 
     def build_set(self, path):
+        """Pass to it whatever set"""
         self.tmp_data = tf.keras.utils.image_dataset_from_directory(
             path,
             labels='inferred',
@@ -83,13 +89,17 @@ class Tester:
             seed=self.seed,
             image_size=(self.img_height, self.img_widht),
         )
-        print(f'TEMP SET: {self.tmp_data.class_names}')
+        print(f'Test set: {self.tmp_data.class_names}')
 
     def get_shape(self):
         assert self.dataset_path != '', 'Specify Dataset Path.'
         images = list(self.dataset_path.glob('naturals/*'))
         rnd_img = cv2.imread(str(random.sample(images, 1)[0].resolve()))
         return rnd_img.shape
+
+    def define_callbacks(self, *args):
+        for _ in args:
+            self.callbacks.append(_)
 
     def plot_results(self):
         acc = self.history.history['accuracy']
@@ -128,15 +138,6 @@ class Tester:
             .format(self.train_ds.class_names[np.argmax(score)], 100 * np.max(score))
         )
 
-    def define_callbacks(self, *args):
-        for _ in args:
-            self.callbacks.append(_)
-
-    def specify_model(self, model, label):
-        self.model = model
-        self.__name__ = label
-        print(f'{self.__name__} has {self.train_ds.class_names}')
-
     def predictor(self, img_array, label: str = ''):
         img_array = tf.expand_dims(img_array, 0)  # Create a batch
         predictions = self.model.predict(img_array)
@@ -161,7 +162,7 @@ class Tester:
             print(f'{os.path.basename(path)} PREDICTED: {t[0], t[1]}, GROUND: {os.path.basename(li)}')
             if t[0] == os.path.basename(li):
                 total -= 1
-        print(f'wrong catch: {total} / {len(os.listdir(li))}')
+        print(f'Wrong catch: {total} / {len(os.listdir(li))}')
 
     def export_model(self):
         self.model.save(self.__name__ + '.h5')
