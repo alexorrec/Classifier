@@ -186,10 +186,7 @@ class Tester:
                               normalize=False,
                               title='Confusion matrix',
                               cmap=plt.cm.Blues):
-        """
-        This function prints and plots the confusion matrix.
-        Normalization can be applied by setting `normalize=True`.
-        """
+
         plt.imshow(cm, interpolation='nearest', cmap=cmap)
         plt.title(title)
         plt.colorbar()

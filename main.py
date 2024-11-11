@@ -29,45 +29,54 @@ model = tf.keras.models.Model(inputs=effB_model.input, outputs=output)
 """
 model = tf.keras.Sequential([
 
+    # Norm
     tf.keras.layers.Normalization(input_shape=shape),
 
-    tf.keras.layers.Conv2D(16, (5, 5), padding='same'),
+    # 1 Conv.Block
+    tf.keras.layers.Conv2D(16, (3, 3), padding='same'),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.ReLU(),
+    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
 
-    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
-
-    tf.keras.layers.Conv2D(32, (5, 5), padding='same'),
+    # 2 Conv.Block
+    tf.keras.layers.Conv2D(32, (3, 3), padding='same'),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.ReLU(),
+    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
+    tf.keras.layers.Dropout(0.3),
 
-    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
-
-    tf.keras.layers.Conv2D(64, (5, 5), padding='same'),
+    # 3 Conv.Block
+    tf.keras.layers.Conv2D(64, (3, 3), padding='same'),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.ReLU(),
+    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
+    tf.keras.layers.Dropout(0.3),
 
-    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
-
-    tf.keras.layers.Conv2D(128, (5, 5), padding='same'),
+    # 4 Conv.Block
+    tf.keras.layers.Conv2D(128, (3, 3), padding='same'),
     tf.keras.layers.BatchNormalization(),
     tf.keras.layers.ReLU(),
+    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
+    tf.keras.layers.Dropout(0.4),
 
-    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
-
+    # Flatten e fully connected + Drop
     tf.keras.layers.Flatten(),
-
     tf.keras.layers.Dense(256, activation='relu'),
     tf.keras.layers.Dropout(0.5),
-
-    tf.keras.layers.Dense(128, activation='relu'),
-    tf.keras.layers.Dropout(0.2),
-
     tf.keras.layers.Dense(num_classes, activation='softmax')
 ])
 
 ts.specify_model(model=model, label='__ELA_Sequential_3v')
 
+lr_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
+    monitor='val_loss',    # La metrica da monitorare (in questo caso la perdita di validazione)
+    factor=0.5,            # Fattore di riduzione del learning rate (es. 0.5 dimezza il learning rate)
+    patience=5,            # Numero di epoche senza miglioramento dopo le quali ridurre il learning rate
+    min_lr=1e-6,           # Limite inferiore per il learning rate (non scenderà sotto questo valore)
+    verbose=1              # Imposta verbose=1 per mostrare i messaggi di riduzione del learning rate
+)
+
+ts.define_callbacks(lr_on_plateau)
 ts.train_model(loss_function='categorical_crossentropy', lr=0.0001)
 
 ts.evaluate_model(ts.val_ds)
