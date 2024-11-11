@@ -5,7 +5,7 @@ import os
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
 ds_path = 'C:\\Users\\Alessandro\\Desktop\\ELA_SET'
-ts = Tester(ds_path, batch_size=256, ds_split=0.2, seed=1, epochs=100)
+ts = Tester(ds_path, batch_size=512, ds_split=0.2, seed=1, epochs=100)
 
 shape = ts.get_shape()
 num_classes: int = len(ts.train_ds.class_names)
@@ -55,26 +55,21 @@ model = tf.keras.Sequential([
 
     tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
 
-    tf.keras.layers.Conv2D(256, (5, 5), padding='same'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.ReLU(),
-
-    tf.keras.layers.MaxPool2D((2, 2), strides=(4, 4)),
-
     tf.keras.layers.Flatten(),
-
-    tf.keras.layers.Dense(512, activation='relu'),
-    tf.keras.layers.Dropout(0.5),
 
     tf.keras.layers.Dense(256, activation='relu'),
     tf.keras.layers.Dropout(0.5),
+
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dropout(0.2),
 
     tf.keras.layers.Dense(num_classes, activation='softmax')
 ])
 
 ts.specify_model(model=model, label='ELA_Sequential_3v')
 
-ts.train_model(loss_function='categorical_crossentropy', lr=0.00001)
+ts.train_model(loss_function='categorical_crossentropy', lr=0.0001)
+
 ts.evaluate_model(ts.val_ds)
 ts.plot_results()
 

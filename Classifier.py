@@ -8,6 +8,7 @@ import pathlib
 from sklearn.metrics import confusion_matrix
 import itertools
 import matplotlib.pyplot as plt
+import json
 
 
 class Tester:
@@ -164,6 +165,10 @@ class Tester:
         print(f'wrong catch: {total} / {len(os.listdir(li))}')
 
     def export_model(self):
+        try:
+            self.model._setattr_metadata("model_labels", json.dumps({"CLASS_NAMES": self.train_ds.class_names}))
+        except:
+            print('LABELSAVE FAILED')
         self.model.save(self.__name__ + '.h5')
 
     def confusion_matrix(self, tensors):
