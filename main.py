@@ -66,7 +66,7 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(num_classes, activation='softmax')
 ])
 
-ts.specify_model(model=model, label='ELA_Sequential_3v')
+ts.specify_model(model=model, label='__ELA_Sequential_3v')
 
 ts.train_model(loss_function='categorical_crossentropy', lr=0.0001)
 

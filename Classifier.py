@@ -169,7 +169,7 @@ class Tester:
         try:
             self.model._setattr_metadata("model_labels", json.dumps({"CLASS_NAMES": self.train_ds.class_names}))
         except:
-            print('LABELSAVE FAILED')
+            print('LABELSAVE FAILED?')
         self.model.save(self.__name__ + '.h5')
 
     def confusion_matrix(self, tensors):
