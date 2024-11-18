@@ -5,7 +5,7 @@ import numpy as np
 import cv2
 import PreProcessing as pp
 # import cv2
-# import tensorflow as tf
+import tensorflow as tf
 import random
 import PRNU
 from PIL import Image
@@ -45,6 +45,7 @@ model = tf.keras.Sequential([
 
     tf.keras.layers.Dense(num_classes, activation='softmax')
 ])
+
 END SEQUENTIAL """
 
 
@@ -68,7 +69,33 @@ for img in img_l:
 
 """
 
-orig = cv2.imread('/Users/alessandrocerro/PycharmProjects/CVUtilities/HIST&NOISE/Hist_Original.png')
-synth = cv2.imread('/Users/alessandrocerro/PycharmProjects/CVUtilities/HIST&NOISE/Hist_PIPED.png')
+import numpy as np
+import cv2
 
-plt.imsave('diff.png', synth-orig, cmap='gray')
+folders = ['C:\\Users\\Alessandro\\Desktop\\PRNU_NPY\\naturals',
+           'C:\\Users\\Alessandro\\Desktop\\PRNU_NPY\\stable-diffusion']
+dest = ['C:\\Users\\Alessandro\\Desktop\\PRNU_BALANCED\\naturals',
+        'C:\\Users\\Alessandro\\Desktop\\PRNU_BALANCED\\stable-diffusion']
+
+for folder in folders:
+    for img_p in os.listdir(folder):
+        grayscale_image = np.load(os.path.join(folder, img_p))  # Replace with your actual file path
+        print('processing', os.path.basename(img_p)[:-4])
+
+        # Step 2: Normalize the image values to range [0, 255]
+        # First, shift the image values to be non-negative by adding the absolute value of the minimum
+        min_val = np.min(grayscale_image)
+        max_val = np.max(grayscale_image)
+
+        # Normalize the image to the range [0, 1]
+        normalized_image = (grayscale_image - min_val) / (max_val - min_val)
+
+        # Scale it to the range [0, 255]
+        normalized_image = normalized_image * 255
+
+        # Step 3: Convert the image to uint8 (8-bit unsigned integer)
+        normalized_image = normalized_image.astype(np.uint8)
+
+        # Step 4: Save the normalized image as a .png file
+        cv2.imwrite(os.path.join(dest[folders.index(folder)], os.path.basename(img_p)[:-4]+'.png'),
+                    normalized_image)

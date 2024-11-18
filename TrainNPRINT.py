@@ -3,9 +3,11 @@ from Classifier import Tester
 import os
 
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
+SAVE_PATH = 'NprintModels'
+
 
 ds_path = 'C:\\Users\\Alessandro\\Desktop\\NOISEPRINT_SET'
-ts = Tester(ds_path, batch_size=512, ds_split=0.2, seed=123, epochs=100)
+ts = Tester(ds_path, batch_size=512, ds_split=0.2, seed=100, epochs=100)
 
 shape = ts.get_shape()
 num_classes: int = len(ts.train_ds.class_names)
@@ -15,7 +17,7 @@ effB_model = tf.keras.applications.EfficientNetB0(weights='imagenet',
                                                   input_shape=shape)
 effB_model.trainable = False
 
-for layer in effB_model.layers[-20:]:
+for layer in effB_model.layers[-5:]:
     if isinstance(layer, tf.keras.layers.Conv2D):
         layer.kernel_regularizer = tf.keras.regularizers.l2(1e-4)
     layer.trainable = True
@@ -26,50 +28,11 @@ x = tf.keras.layers.Dense(256, activation='relu')(x)
 x = tf.keras.layers.Dropout(0.5)(x)
 x = tf.keras.layers.Dense(128, activation='relu')(x)
 x = tf.keras.layers.Dropout(0.3)(x)
-output = tf.keras.layers.Dense(1, activation='sigmoid')(x)
+output = tf.keras.layers.Dense(ts.num_classes, activation='softmax')(x)
 
 
 model = tf.keras.models.Model(inputs=effB_model.input, outputs=output)
-
-"""
-model = tf.keras.Sequential([
-
-    tf.keras.layers.Normalization(input_shape=shape),
-
-    tf.keras.layers.Conv2D(8, (5, 5), padding='same'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.ReLU(),
-    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
-
-    tf.keras.layers.Conv2D(16, (5, 5), padding='same'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.ReLU(),
-    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
-
-    tf.keras.layers.Conv2D(32, (5, 5), padding='same'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.ReLU(),
-    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
-
-    tf.keras.layers.Conv2D(64, (5, 5), padding='same'),
-    tf.keras.layers.BatchNormalization(),
-    tf.keras.layers.ReLU(),
-    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
-
-    tf.keras.layers.Flatten(),
-
-    tf.keras.layers.Dense(128, activation='relu'),
-    tf.keras.layers.Dropout(0.5),
-
-    tf.keras.layers.Dense(64, activation='relu'),
-    tf.keras.layers.Dropout(0.5),
-
-    # tf.keras.layers.Dense(1, activation='sigmoid')
-    tf.keras.layers.Dense(num_classes, activation='softmax') # 3 CLASS
-])
-"""
-
-ts.specify_model(model=model, label='Nprint_take1_EffNetB0_3v')
+ts.specify_model(model=model, label='Nprint_take100_EffNetB0_3v')
 
 lr_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
     monitor='val_loss',  # La metrica da monitorare (in questo caso la perdita di validazione)
@@ -80,7 +43,7 @@ lr_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
 )
 
 restore_best_loss = tf.keras.callbacks.ModelCheckpoint(
-    filepath=ts.__name__ + '.keras',
+    filepath=os.path.join(SAVE_PATH, ts.__name__ + '.keras'),
     monitor='val_loss',
     save_best_only=True,
     save_weights_only=False,
@@ -90,7 +53,7 @@ restore_best_loss = tf.keras.callbacks.ModelCheckpoint(
 
 ts.define_callbacks(lr_on_plateau, restore_best_loss)
 
-ts.train_model(loss_function='binary_crossentropy', lr=0.0001)
+ts.train_model(loss_function='categorical_crossentropy', lr=0.0001)
 
 ts.evaluate_model(ts.val_ds)
 ts.plot_results()

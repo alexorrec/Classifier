@@ -12,10 +12,13 @@ def ciclic_findings(path, listed_):
     for _ in os.listdir(path):
         if os.path.isdir(os.path.join(path, _)):
             ciclic_findings(os.path.join(path, _), listed_)
-        elif os.path.isfile(os.path.join(path, _)) and 'mask' not in _ and '._' not in _:
+        elif os.path.isfile(os.path.join(path, _)) and 'mask' not in _ and '._' not in _ and '.DS'not in _:
             listed_.append(os.path.join(path, _))
             #print(f'PATH: {os.path.join(path, _)}')
 
+def enhance_peaks(img, kernel_):
+    kern = np.ones((kernel_, kernel_), np.uint8)
+    return cv2.dilate(img, kern)
 
 def img2gray(image):
     """RGB to GRAYSCALE"""

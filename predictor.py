@@ -9,34 +9,50 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 
 
-ts = Tester('/Users/alessandrocerro/Desktop/TO_PRED_PRNU')
+#ts = Tester('C:\\Users\\Alessandro\\Desktop\\PRNU_BALANCED')
 
-ts.specify_model(tf.keras.models.load_model('/Volumes/NO NAME/LAST_PRNU_EffNet0_2v.h5'), 'TEST PRNU')
-ts.build_set('/Users/alessandrocerro/Desktop/TO_PRED_PRNU')
+#ts.specify_model(tf.keras.models.load_model('PRNUModels/PRNU_3.keras'), 'TEST PRNU')
 
-predictions = ts.model.predict(ts.tmp_data)
-predicted_classes = np.argmax(predictions, axis=1)
+model = tf.keras.models.load_model('PRNUModels/PRNU_3.keras')
 
 
 
-conf_matrix = confusion_matrix(ts.tmp_data.class_names, predicted_classes)
-
-plt.figure(figsize=(10, 8))
-cm_display = ConfusionMatrixDisplay(confusion_matrix=conf_matrix, display_labels=ts.tmp_data.class_names)
-cm_display.plot(cmap='Blues', values_format='d')
-plt.title('Confusion Matrix')
-plt.show()
-
-"""
-path = input('testset path: ')
-ts.batch_pred(path)
 
 
-ON MAX REALS: 10% FALSE POSITIVE 28/246
-ON MAX AI: 0% FALSE NEGATIVE
+import matplotlib.pyplot as plt
 
-ON MIN REALS: 8/246 FALSE POSITIVE
-ON MIN AI_XL: 3/246 FALSE NEGATIVE 
+def plot_training_history(history):
+    # Extract data from the history object
+    acc = history.history['accuracy']  # Training accuracy
+    val_acc = history.history['val_accuracy']  # Validation accuracy
+    loss = history.history['loss']  # Training loss
+    val_loss = history.history['val_loss']  # Validation loss
 
-path: str = input('Define imagePath: ')
-"""
+    # Set up the figure
+    plt.figure(figsize=(12, 5))
+
+    # Plot Training and Validation Accuracy
+    plt.subplot(1, 2, 1)
+    plt.plot(acc, label='Training Accuracy')
+    plt.plot(val_acc, label='Validation Accuracy')
+    plt.title('Training and Validation Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+
+    # Plot Training and Validation Loss
+    plt.subplot(1, 2, 2)
+    plt.plot(loss, label='Training Loss')
+    plt.plot(val_loss, label='Validation Loss')
+    plt.title('Training and Validation Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+
+    # Show the plots
+    plt.tight_layout()
+    plt.show()
+
+# Example usage
+# Assume `history` is the result of `model.fit()`
+plot_training_history(model.history)

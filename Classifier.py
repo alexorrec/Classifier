@@ -9,10 +9,17 @@ from sklearn.metrics import confusion_matrix
 import itertools
 import matplotlib.pyplot as plt
 import json
+import NpyDataGenerator
 
+SAVE_PATH = 'NprintModels'
 
 class Tester:
-    def __init__(self, dataset: str, batch_size: int = 32, ds_split: float = 0.2, epochs: int = 10, seed: int = 123):
+    def __init__(self, dataset: str,
+                 batch_size: int = 32,
+                 ds_split: float = 0.2,
+                 epochs: int = 10,
+                 seed: int = 123,
+                 is_npy=False):
         self.tmp_data = None
         self.seed: int = seed
         self.callbacks: list = []
@@ -25,8 +32,14 @@ class Tester:
         self.batch_size = batch_size
         self.ds_split: float = ds_split
 
+        self.num_classes = len(os.listdir(dataset))
+        # print(self.num_classes)
+
         self.img_height, self.img_widht, self.img_channels = self.get_shape()
-        self.build_sets()
+        if is_npy:
+            self.build_npyGen()
+        else: self.build_sets()
+
         self.history = None
 
     def specify_model(self, model, label):
@@ -39,7 +52,7 @@ class Tester:
 
         self.model.compile(optimizer=tf.keras.optimizers.Adam(learning_rate=lr),
                            loss=loss_function,
-                           metrics=['accuracy']
+                           metrics=['accuracy', 'AUC', 'Precision', 'Recall']
                            )
 
         self.history = self.model.fit(
@@ -49,15 +62,48 @@ class Tester:
             callbacks=self.callbacks
         )
 
+    """
     def evaluate_model(self, dataset):
         test_loss, test_acc = self.model.evaluate(dataset, verbose=2)
         print(f'{self.__name__} - Loss {test_loss} - Accuracy {test_acc} on ValSet')
+    """
+    def evaluate_model(self, dataset):
+        from sklearn.metrics import average_precision_score
+        y_true = []
+        y_pred_probs = []
+
+        for x, y in dataset:
+            y_true.extend(y.numpy())  # Append true labels
+            y_pred_probs.extend(self.model.predict(x).flatten())  # Predict probabilities
+
+        # Compute metrics
+        test_loss, test_acc = self.model.evaluate(dataset, verbose=2)  # Default loss & accuracy
+        auc_pr = average_precision_score(y_true, y_pred_probs)  # AUC Precision-Recall
+
+        # Print results
+        print(
+            f"LoadedModelHas\n - Loss: {test_loss:.4f} - Accuracy: {test_acc:.4f} - AUC Precision-Recall: {auc_pr:.4f}")
+
+    def build_npyGen(self):
+        self.train_ds = NpyDataGenerator.NpyDataGenerator(
+            directory=self.dataset_path,
+            batch_size=self.batch_size,
+            validation_split=self.ds_split,
+            subset='training'
+        )
+
+        self.val_ds = NpyDataGenerator.NpyDataGenerator(
+            directory=self.dataset_path,
+            batch_size=self.batch_size,
+            validation_split=self.ds_split,
+            subset='validation'
+        )
 
     def build_sets(self):
         self.train_ds = tf.keras.utils.image_dataset_from_directory(
             self.dataset_path,
             labels='inferred',
-            label_mode='categorical',
+            label_mode='int' if self.num_classes == 2 else 'categorical',  # Categorical for multiclass, Int for binary
             color_mode='rgb',
             validation_split=self.ds_split,
             subset="training",
@@ -70,7 +116,7 @@ class Tester:
         self.val_ds = tf.keras.utils.image_dataset_from_directory(
             self.dataset_path,
             labels='inferred',
-            label_mode='categorical',
+            label_mode='int' if self.num_classes == 2 else 'categorical',  # Categorical for multiclass, Int for binary
             color_mode='rgb',
             validation_split=self.ds_split,
             subset="validation",
@@ -80,12 +126,15 @@ class Tester:
             batch_size=self.batch_size
         )
 
+        # print(f'FlowFromDS loaded: {self.train_ds.label_mode}')
+
+
     def build_set(self, path):
         """Pass to it whatever set"""
         self.tmp_data = tf.keras.utils.image_dataset_from_directory(
             path,
             labels='inferred',
-            label_mode='categorical',
+            label_mode= 'int' if self.num_classes == 2 else 'categorical',
             color_mode='rgb',
             seed=self.seed,
             image_size=(self.img_height, self.img_widht),
@@ -94,15 +143,21 @@ class Tester:
 
     def get_shape(self):
         assert self.dataset_path != '', 'Specify Dataset Path.'
-        images = list(self.dataset_path.glob('naturals/*'))
+
+        images = list(self.dataset_path.glob('*/*'))
         rnd_img = cv2.imread(str(random.sample(images, 1)[0].resolve()))
+        if rnd_img is None:
+            rnd_img = np.load(str(random.sample(images, 1)[0].resolve()))
+            dim = np.expand_dims(rnd_img, axis=-1)
+            dim = np.repeat(dim, 3, axis=-1)
+            print(dim.shape)
         return rnd_img.shape
 
     def define_callbacks(self, *args):
         for _ in args:
             self.callbacks.append(_)
 
-    def plot_results(self):
+    def plot_results(self, path=''):
         acc = self.history.history['accuracy']
         val_acc = self.history.history['val_accuracy']
 
@@ -123,7 +178,7 @@ class Tester:
         plt.plot(epochs_range, val_loss, label='Validation Loss')
         plt.legend(loc='upper right')
         plt.title('Training and Validation Loss')
-        plt.savefig(f'{self.__name__}_plot.png')
+        plt.savefig(os.path.join(path, f'{self.__name__}_plot.png'))
 
     def make_prediction(self, image_path):
         """ PASS CV2 IMAGE, GET TILE, GET ELA, PREDICT"""
