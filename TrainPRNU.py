@@ -2,12 +2,13 @@ import tensorflow as tf
 from Classifier import Tester
 import sequential
 import os
+import json
 
 save_path = 'PRNUModels'
 
 specs = {
-    'ds_path': 'C:\\Users\\Alessandro\\Desktop\\PRNU_BALANCED',
-    'batch_size': 64,
+    'ds_path': '/Users/alessandrocerro/Desktop/ELA_SET',
+    'batch_size': 32,
     'split': 0.2,
     'seed': 3,
     'epochs': 100
@@ -22,13 +23,6 @@ trainer = Tester(dataset=specs['ds_path'],
 
 labels = trainer.train_ds.class_names
 num_classes = len(trainer.train_ds.class_names)
-#num_classes=2
-"""
-model = sequential.get_sequential(num_classes=num_classes if num_classes > 2 else 1,
-                                  shape=trainer.get_shape(),
-                                  activation='sigmoid' if num_classes == 2 else 'softmax')
-"""
-
 
 effB_model = tf.keras.applications.EfficientNetB0(weights='imagenet',
                                                   include_top=False,
@@ -43,7 +37,7 @@ for layer in effB_model.layers[-20:]:
 # Last LAYER Customization
 x = tf.keras.layers.Flatten()(effB_model.output)
 x = tf.keras.layers.Dense(128, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.01))(x)
-x = tf.keras.layers.Dropout(0.4)(x)
+x = tf.keras.layers.Dropout(0.5)(x)
 output = tf.keras.layers.Dense(1, activation='sigmoid')(x)
 
 
@@ -60,7 +54,11 @@ trainer.train_model(loss_function='binary_crossentropy' if num_classes == 2 else
 trainer.evaluate_model(trainer.val_ds)
 trainer.plot_results(path=save_path)
 
-# labels = ['naturals', 'stable-diffusion']
+try:
+    json.dump(trainer.history.history, open(os.path.join(save_path, f'{trainer.__name__}_history.txt'), 'w+'))
+except Exception as e:
+    print(f'HISTORY SAVING FAILED {e}')
+
 with open(f'report_{trainer.__name__}.txt', 'w+') as file:
     file.write('LABELS:\n')
     for line in labels:

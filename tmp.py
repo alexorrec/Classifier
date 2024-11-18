@@ -10,7 +10,7 @@ import random
 import PRNU
 from PIL import Image
 
-
+from Classifier import Tester
 
 """ DEFINE SEQUENTIAL MODEL HERE 
 model = tf.keras.Sequential([
@@ -50,7 +50,7 @@ END SEQUENTIAL """
 
 
 """
-DESTINATION = '/Users/alessandrocerro/Desktop/TO_PRED_PRNU/stable-diffusion-XL'
+DESTINATION = '/Users/alessandrocerro/Desktop/ELA_2/naturals'
 ORIGIN = '/Users/alessandrocerro/Desktop/TO_PREDICT/AI'
 
 img_l = []
@@ -66,7 +66,7 @@ for img in img_l:
         print(f'{os.path.basename(img)} - PRNU HAS BEEN SAVED!')
     except:
         pass
-
+"""
 """
 
 import numpy as np
@@ -99,3 +99,65 @@ for folder in folders:
         # Step 4: Save the normalized image as a .png file
         cv2.imwrite(os.path.join(dest[folders.index(folder)], os.path.basename(img_p)[:-4]+'.png'),
                     normalized_image)
+"""
+dataset_path = '/Volumes/NO NAME/PRNU_SET'
+
+_ds = tf.keras.utils.image_dataset_from_directory(
+            dataset_path,
+            labels='inferred',
+            label_mode='categorical',
+            color_mode='rgb',
+            validation_split=0.2,
+            subset="training",
+            seed=1,
+            image_size=(512,512),
+            shuffle=True,
+            batch_size=128
+        )
+val_ds = tf.keras.utils.image_dataset_from_directory(
+            dataset_path,
+            labels='inferred',
+            label_mode='categorical',
+            color_mode='rgb',
+            validation_split=0.2,
+            subset="validation",
+            seed=1,
+            image_size=(512,512),
+            shuffle=True,
+            batch_size=128
+        )
+
+model = tf.keras.models.load_model('/Volumes/NO NAME/PRNU_EfficientNetB0_3v.h5')
+
+def preprocess_image(img_path):
+    img = tf.keras.preprocessing.image.load_img(img_path, target_size=(512,512))  # Load image and resize
+    img_array = tf.keras.preprocessing.image.img_to_array(img)  # Convert image to array
+    img_array = np.expand_dims(img_array, axis=0)  # Add batch dimension
+    return img_array
+
+TP = 0
+F = 0
+class_names = os.listdir(dataset_path)
+for class_name in class_names:
+    class_folder = os.path.join(dataset_path, class_name)
+    if os.path.isdir(class_folder):
+        for img_name in os.listdir(class_folder)[:50]:
+            if '._' in img_name:
+                continue
+            img_path = os.path.join(class_folder, img_name)
+            if img_path.lower().endswith(('.png', '.jpg', '.jpeg')):  # Check if it's an image file
+                img_array = preprocess_image(img_path)
+
+                # Make prediction
+                prediction = model.predict(img_array)
+                predicted_class = np.argmax(prediction)  # Get the index of the class with the highest probability
+                predicted_label = class_names[predicted_class]  # Map index to the class name
+
+                if predicted_label == class_name:
+                    TP += 1
+                else:
+                    F += 1
+                # Output the prediction
+                print(f'Image: {img_name} | True Class: {class_name} | Predicted Class: {predicted_label}')
+
+print(f'TP: {TP} | F: {F}')

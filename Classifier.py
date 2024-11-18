@@ -32,6 +32,9 @@ class Tester:
         self.batch_size = batch_size
         self.ds_split: float = ds_split
 
+
+        if '.DS_Store' in os.listdir(dataset):
+            os.remove(os.path.join(dataset, '.DS_Store'))
         self.num_classes = len(os.listdir(dataset))
         # print(self.num_classes)
 
@@ -68,21 +71,19 @@ class Tester:
         print(f'{self.__name__} - Loss {test_loss} - Accuracy {test_acc} on ValSet')
     """
     def evaluate_model(self, dataset):
-        from sklearn.metrics import average_precision_score
-        y_true = []
-        y_pred_probs = []
+        results = self.model.evaluate(dataset, verbose=2)
 
-        for x, y in dataset:
-            y_true.extend(y.numpy())  # Append true labels
-            y_pred_probs.extend(self.model.predict(x).flatten())  # Predict probabilities
+        # Unpack and assign values
+        test_loss = results[0]  # Loss
+        test_acc = results[1]   # Accuracy
+        test_auc = results[2]   # AUC
+        test_precision = results[3]  # Precision
+        test_recall = results[4]  # Recall
 
-        # Compute metrics
-        test_loss, test_acc = self.model.evaluate(dataset, verbose=2)  # Default loss & accuracy
-        auc_pr = average_precision_score(y_true, y_pred_probs)  # AUC Precision-Recall
+        # Print the results
+        print(f'{self.__name__} - Loss: {test_loss:.4f} - Accuracy: {test_acc:.4f}')
+        print(f'AUC: {test_auc:.4f} - Precision: {test_precision:.4f} - Recall: {test_recall:.4f}')
 
-        # Print results
-        print(
-            f"LoadedModelHas\n - Loss: {test_loss:.4f} - Accuracy: {test_acc:.4f} - AUC Precision-Recall: {auc_pr:.4f}")
 
     def build_npyGen(self):
         self.train_ds = NpyDataGenerator.NpyDataGenerator(
@@ -146,11 +147,7 @@ class Tester:
 
         images = list(self.dataset_path.glob('*/*'))
         rnd_img = cv2.imread(str(random.sample(images, 1)[0].resolve()))
-        if rnd_img is None:
-            rnd_img = np.load(str(random.sample(images, 1)[0].resolve()))
-            dim = np.expand_dims(rnd_img, axis=-1)
-            dim = np.repeat(dim, 3, axis=-1)
-            print(dim.shape)
+        print(f'Retrieved shape: {rnd_img.shape}')
         return rnd_img.shape
 
     def define_callbacks(self, *args):
@@ -166,7 +163,7 @@ class Tester:
 
         epochs_range = range(len(acc))
 
-        plt.figure(figsize=(8, 8))
+        plt.figure(figsize=(12, 6))
         plt.subplot(1, 2, 1)
         plt.plot(epochs_range, acc, label='Training Accuracy')
         plt.plot(epochs_range, val_acc, label='Validation Accuracy')

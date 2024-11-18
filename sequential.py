@@ -5,22 +5,22 @@ def get_sequential(num_classes, shape, activation):
     model = tf.keras.Sequential([
         tf.keras.layers.Normalization(input_shape=shape),
 
-        tf.keras.layers.Conv2D(8, (5, 5), padding='same'),
+        tf.keras.layers.Conv2D(8, (3, 3), padding='same'),
         tf.keras.layers.BatchNormalization(),
         tf.keras.layers.ReLU(),
         tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
 
-        tf.keras.layers.Conv2D(16, (5, 5), padding='same'),
+        tf.keras.layers.Conv2D(16, (3, 3), padding='same'),
         tf.keras.layers.BatchNormalization(),
         tf.keras.layers.ReLU(),
         tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
 
-        tf.keras.layers.Conv2D(32, (5, 5), padding='same'),
+        tf.keras.layers.Conv2D(32, (3, 3), padding='same'),
         tf.keras.layers.BatchNormalization(),
         tf.keras.layers.ReLU(),
         tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
 
-        tf.keras.layers.Conv2D(64, (5, 5), padding='same'),
+        tf.keras.layers.Conv2D(64, (3, 3), padding='same'),
         tf.keras.layers.BatchNormalization(),
         tf.keras.layers.ReLU(),
         tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
@@ -29,7 +29,6 @@ def get_sequential(num_classes, shape, activation):
 
         tf.keras.layers.Dense(128, activation='relu'),
         tf.keras.layers.Dropout(0.5),
-
         tf.keras.layers.Dense(64, activation='relu'),
         tf.keras.layers.Dropout(0.5),
 
@@ -39,6 +38,7 @@ def get_sequential(num_classes, shape, activation):
     return model
 
 import os
+
 def get_callbacks(path, name):
     lr_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
         monitor='val_loss',  # La metrica da monitorare (in questo caso la perdita di validazione)

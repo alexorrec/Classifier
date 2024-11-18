@@ -4,12 +4,12 @@ import os
 
 os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 
-ds_path = 'C:\\Users\\Alessandro\\Desktop\\NOISEPRINT_SET'
-ts = Tester(ds_path, batch_size=512, ds_split=0.2, seed=123, epochs=100)
+ds_path = '/Users/alessandrocerro/Desktop/ELA_SET'
+ts = Tester(ds_path, batch_size=128, ds_split=0.2, seed=123, epochs=100)
 
 shape = ts.get_shape()
 num_classes: int = len(ts.train_ds.class_names)
-
+"""
 effB_model = tf.keras.applications.EfficientNetB0(weights='imagenet',
                                                   include_top=False,
                                                   input_shape=shape)
@@ -32,6 +32,7 @@ output = tf.keras.layers.Dense(1, activation='sigmoid')(x)
 model = tf.keras.models.Model(inputs=effB_model.input, outputs=output)
 
 """
+
 model = tf.keras.Sequential([
 
     tf.keras.layers.Normalization(input_shape=shape),
@@ -64,10 +65,10 @@ model = tf.keras.Sequential([
     tf.keras.layers.Dense(64, activation='relu'),
     tf.keras.layers.Dropout(0.5),
 
-    # tf.keras.layers.Dense(1, activation='sigmoid')
-    tf.keras.layers.Dense(num_classes, activation='softmax') # 3 CLASS
+    tf.keras.layers.Dense(1, activation='sigmoid')
+    # tf.keras.layers.Dense(num_classes, activation='softmax') # 3 CLASS
 ])
-"""
+
 
 ts.specify_model(model=model, label='Nprint_take1_EffNetB0_3v')
 
