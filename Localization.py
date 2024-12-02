@@ -1,3 +1,5 @@
+from tkinter import Image
+from PIL import Image
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
@@ -5,71 +7,80 @@ import PRNU
 import tensorflow as tf
 import os
 import PreProcessing as pp
+from tqdm import tqdm
 
-model_path = '/Volumes/NO NAME/LAST_PRNU_EffNet0_2v.h5'
+model_path = '/Volumes/NO NAME/PRNULOC_1001.keras'
 model = tf.keras.models.load_model(model_path)
 
-# Load pre-stored Labels
-with open('labels2v.txt', 'r') as file:
-    labels = [line.strip() for line in file]
 
-print(f'Loaded model: {os.path.basename(model_path)} - model Labels: {labels}')
+def get_ground(path):
+    if path[-4:] == '.png':
+        return path[:-4] + 'mask.png'
+    return None
 
 
 def predict(_patch):
     img_array = tf.keras.utils.img_to_array(_patch)
     img_array = tf.expand_dims(img_array, 0)  # Create a batch
+    img_array = np.repeat(img_array, repeats=3, axis=-1)
     pred = model.predict(img_array, verbose=0)
-    score = tf.nn.softmax(pred[0])
-    label = labels[np.argmax(score)]
-    return label, 100 * np.max(score)
+    if pred[0][0] >= 0.8:
+        return 90
+    elif 0.65 <= pred[0][0] < 0.8:
+        return 60
+    elif 0.5 < pred[0][0] < 0.65:
+        return 35
+    elif 0.35 < pred[0][0] <= 0.5:
+        return 5
+    return -10
 
 
-def most_frequent(List):
-    return max(set(List), key=List.count)
-
-
-def prnu_localization(image_path):
+def prnu_localization(image_path, mask_path):
     original_image = cv2.imread(image_path)
     height, width = original_image.shape[:2]
 
-    patch_size = 512
-
+    patch_size = 256
+    stride = 32
     heatmap = np.zeros((height, width), dtype=np.float32)
-    patch_labels: list = []
-    for y in range(0, height, patch_size):
-        for x in range(0, width, patch_size):
+    i = 0
+    for y in range(0, height, stride):
+        for x in range(0, width, stride):
             patch = original_image[y:y + patch_size, x:x + patch_size]
-
             if patch.shape[0] != patch_size or patch.shape[1] != patch_size:
-                continue  # Not a 512 patch
+                continue
 
-            print(f'processing patch @ {x, y}')
-            prnu_patch = PRNU.extract_single(patch)
+            prnu_patch = pp.normalize(PRNU.extract_single(patch))
+            score = predict(prnu_patch)
+            heatmap[y:y + patch_size, x:x + patch_size] += score
+            if np.any(heatmap[y:y + patch_size, x:x + patch_size] < 0):
+                heatmap[y:y + patch_size, x:x + patch_size] = 0
 
-            label, score = predict(prnu_patch)
+            """            
+            plt.figure(figsize=(12, 10))
+            #plt.subplot(1, 1, 1)  # 1 rows, 2 column, 1st subplot
+            plt.imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
+            heatmap_plot = plt.imshow(heatmap, alpha=0.5)
+            colorbar = plt.colorbar(heatmap_plot, fraction=0.046 * height / width, pad=0.04)
+            colorbar.set_label("Denoised to Inpainted")
+            plt.axis('off')
+            i += 1
+            plt.savefig(os.path.join(os.path.basename(img_p), f'{str(i)}_PLOT.jpg'))
+            plt.cla()
+            plt.clf()
+            plt.close('all')
+            """
+            cv2.imwrite('test/test.png', heatmap)
 
-            norm_score = score / 100.0
-            patch_labels.append(label)
-            if label == 'naturals':
-                norm_score = (100 - norm_score) / 100.0
 
-            heatmap[y:y + patch_size, x:x + patch_size] = norm_score
-
-    plt.figure(figsize=(10, 8))
-
-    plt.imshow(cv2.cvtColor(original_image, cv2.COLOR_BGR2RGB))
-
-    heatmap_plot = plt.imshow(heatmap, cmap='coolwarm', alpha=0.6, interpolation='nearest')
-
-    colorbar = plt.colorbar(heatmap_plot, fraction=0.046 * height / width, pad=0.04)
-    colorbar.set_label("nat 2 AI")
-
-    plt.axis('off')
-    plt.title(f"Localization Heatmap")
-    plt.show()
-
-prnu_localization('/Users/alessandrocerro/Desktop/TO_PREDICT/AI/D24_L6S2C2.JPG/D24_L6S2C2.JPG_0.png')
+folder = '/Users/alessandrocerro/Desktop/presentation'
+imgs_ = []
+pp.ciclic_findings(folder, imgs_)
+for img_p in tqdm(imgs_, desc=f'Processing folder: '):
+    mask = get_ground(img_p)
+    if mask is not None:
+        os.mkdir(os.path.join('', os.path.basename(img_p)))
+        print(img_p, mask)
+        prnu_localization(img_p, mask)
 
 ##########################################
 """
