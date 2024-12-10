@@ -8,7 +8,6 @@ import numpy as np
 
 
 def ciclic_findings(path, listed_):
-    """Given a Path, find all images even in subpaths"""
     for _ in os.listdir(path):
         if os.path.isdir(os.path.join(path, _)):
             ciclic_findings(os.path.join(path, _), listed_)
@@ -28,8 +27,9 @@ def img2gray(image):
 
 
 def normalize(res):
-    normalized_image = (res - np.min(res)) * (255.0 / (np.max(res) - np.min(res)))
-    return normalized_image.astype('uint8')
+    normalized_image = (res - np.min(res)) / (np.max(res) - np.min(res))
+    normalized_image = normalized_image * 255.0
+    return normalized_image.astype(np.uint8)
 
 
 def dft(image):
@@ -44,17 +44,18 @@ def dft(image):
 
 def get_tiles(img: np.ndarray, size=(512, 512), more_tiles=0, just_MinMax=False):
     """Get a Crops of the original image"""
-
     height, width, channels = img.shape
 
     crop_height, crop_width = size
     weights: list = list()
-
-    for y in range(0, height - crop_height + 1, 512):
-        for x in range(0, width - crop_width + 1, 512):
-            crop = img[y:y + crop_height, x:x + crop_width]
-            crop_sum = np.sum(dft(crop))
-            weights.append(((y, x), crop_sum))
+    try:
+        for y in range(0, height - crop_height + 1, 512):
+            for x in range(0, width - crop_width + 1, 512):
+                crop = img[y:y + crop_height, x:x + crop_width]
+                crop_sum = np.sum(dft(crop))
+                weights.append(((y, x), crop_sum))
+    except:
+        return img[(height-size[0])//2:(height+size[0])//2, (width-size[0])//2:(width+size[0])//2]
 
     tiles = []
     if just_MinMax:
@@ -67,8 +68,8 @@ def get_tiles(img: np.ndarray, size=(512, 512), more_tiles=0, just_MinMax=False)
         min_tile = img[y_min:y_min + crop_height, x_min:x_min + crop_width]
         max_tile = img[y_max:y_max + crop_height, x_max:x_max + crop_width]
 
-        #weights.remove(min_crop)
-        #weights.remove(max_crop)
+        weights.remove(min_crop)
+        weights.remove(max_crop)
 
         tiles.append(min_tile)
         tiles.append(max_tile)
@@ -86,7 +87,7 @@ def get_tiles(img: np.ndarray, size=(512, 512), more_tiles=0, just_MinMax=False)
     return tiles
 
 
-def get_ELA_(cv2_image, save_dir: str = '', brigh_it_up: int = 1):
+def get_ELA_(cv2_image, save_dir: str = 'ELAtmp', brigh_it_up: int = 1):
     im = Image.fromarray(cv2.cvtColor(cv2_image, cv2.COLOR_BGR2RGB))
 
     tmp_fname = os.path.join(save_dir, 'TMP_EXT')
@@ -112,30 +113,3 @@ def export_jpg(img: np.array, filenname: str, quality: int = 95, path: str = '')
     im.save(os.path.join(path, filenname) + '.jpg', format='JPEG', quality=quality)
     print(f'{filenname} SAVED!')
 
-
-def average_images(img_l: list):
-    """get a list of cv2, return a cv2"""
-    N = len(img_l)
-
-    arr = img_l[0].astype(np.float32)
-    for im in img_l[1:]:
-        arr += im.astype(np.float32)
-
-        print(f'\r Computing: {int(time.time_ns() + 1) * 100 // N}%', end='')
-        time.sleep(0.01)
-
-    arr = arr / N
-
-    return arr.astype(np.uint8)
-
-
-def get_NoisePrint(img: np.array):
-    pass
-
-
-def get_SensorPatternNoise(img: np.array):
-    pass
-
-
-def get_PRNU(img: np.array):
-    pass

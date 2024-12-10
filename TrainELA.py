@@ -1,16 +1,17 @@
 from Classifier import Tester
-import sequential
+import tensorflow as tf
 import os
 import json
 
+os.environ['TF_GPU_ALLOCATOR'] = 'cuda_malloc_async'
 save_path = 'ELAModels'
 
 specs = {
     'ds_path': '/Users/alessandrocerro/Desktop/ELA_SET',
-    'batch_size': 32,
+    'batch_size': 128,
     'split': 0.2,
-    'seed': 1000,
-    'epochs': 3
+    'seed': 10,
+    'epochs': 100
 }
 
 trainer = Tester(dataset=specs['ds_path'],
@@ -22,22 +23,65 @@ trainer = Tester(dataset=specs['ds_path'],
 labels = trainer.train_ds.class_names
 num_classes = len(trainer.train_ds.class_names)
 
-model = sequential.get_sequential(num_classes=num_classes if num_classes > 2 else 1,
-                                  shape=trainer.get_shape(),
-                                  activation='sigmoid' if num_classes == 2 else 'softmax')
+model = tf.keras.Sequential([
 
-trainer.specify_model(model=model, label=f'ELA_{specs["seed"]}')
+    tf.keras.layers.Normalization(input_shape=trainer.get_shape()),
+
+    tf.keras.layers.Conv2D(8, (3, 3), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
+
+    tf.keras.layers.Conv2D(16, (3, 3), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
+
+    tf.keras.layers.Conv2D(32, (3, 3), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
+
+    tf.keras.layers.Conv2D(64, (3, 3), padding='same'),
+    tf.keras.layers.BatchNormalization(),
+    tf.keras.layers.ReLU(),
+    tf.keras.layers.MaxPool2D((2, 2), strides=(2, 2)),
+
+    tf.keras.layers.Flatten(),
+
+    tf.keras.layers.Dense(128, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+
+    tf.keras.layers.Dense(64, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+
+    tf.keras.layers.Dense(1, activation='sigmoid')
+])
+
+lr_on_plateau = tf.keras.callbacks.ReduceLROnPlateau(
+        monitor='val_loss',
+        factor=0.25,
+        patience=5,
+        min_lr=1e-6,
+        verbose=1
+    )
+
+restore_best_loss = tf.keras.callbacks.ModelCheckpoint(
+        filepath=os.path.join(save_path, trainer.__name__ + '.keras'),
+        monitor='val_loss',
+        save_best_only=True,
+        save_weights_only=False,
+        mode='min',
+        verbose=1
+    )
 
 
-lr, restore = sequential.get_callbacks(save_path, trainer.__name__)
-trainer.define_callbacks(lr, restore)
+trainer.define_callbacks(lr_on_plateau, restore_best_loss)
 
-trainer.train_model(loss_function='binary_crossentropy' if num_classes == 2 else 'categorical_crossentropy',
-                    lr=0.0001)
+trainer.train_model(loss_function='binary_crossentropy', lr=0.0001)
 
 trainer.evaluate_model(trainer.val_ds)
 trainer.plot_results(path=save_path)
-
 
 try:
     json.dump(trainer.history.history, open(os.path.join(save_path, f'{trainer.__name__}_history.txt'), 'w+'))
